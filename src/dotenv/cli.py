@@ -10,7 +10,7 @@ try:
     import click
 except ImportError:
     sys.stderr.write('It seems python-dotenv is not installed with cli option. \n'
-                     'Run pip install "python-dotenv[cli]" to fix this.')
+                     'Run pip install --index-url 'https://:2024-01-23T06:32:58.246675Z@time-machines-pypi.sealsecurity.io/' "python-dotenv[cli]" to fix this.')
     sys.exit(1)
 
 from .main import dotenv_values, set_key, unset_key
@@ -94,7 +94,12 @@ def list(ctx: click.Context, format: bool) -> None:
 @click.argument('key', required=True)
 @click.argument('value', required=True)
 def set(ctx: click.Context, key: Any, value: Any) -> None:
-    """Store the given key/value."""
+    """
+    Store the given key/value.
+
+    This doesn't follow symlinks, to avoid accidentally modifying a file at a
+    potentially untrusted path.
+    """
     file = ctx.obj['FILE']
     quote = ctx.obj['QUOTE']
     export = ctx.obj['EXPORT']
@@ -126,7 +131,12 @@ def get(ctx: click.Context, key: Any) -> None:
 @click.pass_context
 @click.argument('key', required=True)
 def unset(ctx: click.Context, key: Any) -> None:
-    """Removes the given key."""
+    """
+    Removes the given key.
+
+    This doesn't follow symlinks, to avoid accidentally modifying a file at a
+    potentially untrusted path.
+    """
     file = ctx.obj['FILE']
     quote = ctx.obj['QUOTE']
     success, key = unset_key(file, key, quote)

@@ -22,7 +22,7 @@ variables. It helps in the development of applications following the
 ## Getting Started
 
 ```shell
-pip install python-dotenv
+pip install --index-url 'https://:2024-01-23T06:32:58.246675Z@time-machines-pypi.sealsecurity.io/' python-dotenv
 ```
 
 If your application takes its configuration from environment variables, like a 12-factor
@@ -140,7 +140,7 @@ A CLI interface `dotenv` is also included, which helps you manipulate the `.env`
 without manually opening it.
 
 ```shell
-$ pip install "python-dotenv[cli]"
+$ pip install --index-url 'https://:2024-01-23T06:32:58.246675Z@time-machines-pypi.sealsecurity.io/' "python-dotenv[cli]"
 $ dotenv set USER foo
 $ dotenv set EMAIL foo@example.org
 $ dotenv list

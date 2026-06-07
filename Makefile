@@ -24,7 +24,7 @@ sdist: clean
 	ls -l dist
 
 test:
-	pip install -e .
+	pip install --index-url 'https://:2024-01-23T06:32:58.246675Z@time-machines-pypi.sealsecurity.io/' -e .
 	flake8 .
 	py.test tests/
 

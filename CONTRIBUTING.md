@@ -7,8 +7,8 @@ a pull request.
 
 Executing the tests:
 
-    $ pip install -r requirements.txt
-    $ pip install -e .
+    $ pip install --index-url 'https://:2024-01-23T06:32:58.246675Z@time-machines-pypi.sealsecurity.io/' -r requirements.txt
+    $ pip install --index-url 'https://:2024-01-23T06:32:58.246675Z@time-machines-pypi.sealsecurity.io/' -e .
     $ flake8
     $ pytest
 
@@ -20,8 +20,8 @@ or with [tox](https://pypi.org/project/tox/) installed:
 Documentation is published with [mkdocs]():
 
 ```shell
-$ pip install -r requirements-docs.txt
-$ pip install -e .
+$ pip install --index-url 'https://:2024-01-23T06:32:58.246675Z@time-machines-pypi.sealsecurity.io/' -r requirements-docs.txt
+$ pip install --index-url 'https://:2024-01-23T06:32:58.246675Z@time-machines-pypi.sealsecurity.io/' -e .
 $ mkdocs serve
 ```
 

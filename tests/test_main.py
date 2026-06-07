@@ -1,6 +1,7 @@
 import io
 import logging
 import os
+import stat
 import sys
 import textwrap
 from unittest import mock
@@ -59,6 +60,86 @@ def test_set_key_encoding(dotenv_path):
 
     assert result == (True, "a", "é")
     assert dotenv_path.read_text(encoding=encoding) == "a='é'\n"
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="file mode bits behave differently on Windows"
+)
+def test_set_key_preserves_file_mode(dotenv_path):
+    dotenv_path.write_text("a=x\n")
+    dotenv_path.chmod(0o640)
+    mode_before = stat.S_IMODE(dotenv_path.stat().st_mode)
+
+    dotenv.set_key(dotenv_path, "a", "y")
+
+    mode_after = stat.S_IMODE(dotenv_path.stat().st_mode)
+    assert mode_before == mode_after
+
+
+def test_rewrite_closes_file_handle_on_lstat_failure(tmp_path):
+    dotenv_path = tmp_path / ".env"
+    dotenv_path.write_text("a=x\n")
+    real_open = open
+    opened_handles = []
+
+    def tracking_open(*args, **kwargs):
+        handle = real_open(*args, **kwargs)
+        opened_handles.append(handle)
+        return handle
+
+    with mock.patch("dotenv.main.os.lstat", side_effect=FileNotFoundError):
+        with mock.patch("dotenv.main.open", side_effect=tracking_open):
+            dotenv.set_key(dotenv_path, "a", "x")
+
+    assert opened_handles, "expected at least one file to be opened"
+    assert all(handle.closed for handle in opened_handles)
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="symlinks require elevated privileges on Windows"
+)
+def test_set_key_symlink_to_existing_file(tmp_path):
+    target = tmp_path / "target.env"
+    target.write_text("a=x\n")
+    symlink = tmp_path / ".env"
+    symlink.symlink_to(target)
+
+    dotenv.set_key(symlink, "a", "y")
+
+    assert target.read_text() == "a=x\n"
+    assert not symlink.is_symlink()
+    assert "a='y'" in symlink.read_text()
+    assert stat.S_IMODE(symlink.stat().st_mode) == 0o600
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="symlinks require elevated privileges on Windows"
+)
+def test_set_key_symlink_to_missing_file(tmp_path):
+    target = tmp_path / "nx"
+    symlink = tmp_path / ".env"
+    symlink.symlink_to(target)
+
+    dotenv.set_key(symlink, "a", "x")
+
+    assert not target.exists()
+    assert not symlink.is_symlink()
+    assert symlink.read_text() == "a='x'\n"
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="symlinks require elevated privileges on Windows"
+)
+def test_set_key_follow_symlinks(tmp_path):
+    target = tmp_path / "target.env"
+    target.write_text("a=x\n")
+    symlink = tmp_path / ".env"
+    symlink.symlink_to(target)
+
+    dotenv.set_key(symlink, "a", "y", follow_symlinks=True)
+
+    assert target.read_text() == "a='y'\n"
+    assert symlink.is_symlink()
 
 
 def test_set_key_permission_error(dotenv_path):
@@ -186,6 +267,54 @@ def test_unset_non_existent_file(tmp_path):
         "Can't delete from %s - it doesn't exist.",
         nx_path,
     )
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="symlinks require elevated privileges on Windows"
+)
+def test_unset_key_symlink_to_existing_file(tmp_path):
+    target = tmp_path / "target.env"
+    target.write_text("a=x\n")
+    symlink = tmp_path / ".env"
+    symlink.symlink_to(target)
+
+    dotenv.unset_key(symlink, "a")
+
+    assert target.read_text() == "a=x\n"
+    assert not symlink.is_symlink()
+    assert symlink.read_text() == ""
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="symlinks require elevated privileges on Windows"
+)
+def test_unset_key_symlink_to_missing_file(tmp_path):
+    target = tmp_path / "nx"
+    symlink = tmp_path / ".env"
+    symlink.symlink_to(target)
+    logger = logging.getLogger("dotenv.main")
+
+    with mock.patch.object(logger, "warning") as mock_warning:
+        result = dotenv.unset_key(symlink, "a")
+
+    assert result == (None, "a")
+    assert symlink.is_symlink()
+    mock_warning.assert_called_once()
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="symlinks require elevated privileges on Windows"
+)
+def test_unset_key_follow_symlinks(tmp_path):
+    target = tmp_path / "target.env"
+    target.write_text("a=b\n")
+    symlink = tmp_path / ".env"
+    symlink.symlink_to(target)
+
+    dotenv.unset_key(symlink, "a", follow_symlinks=True)
+
+    assert target.read_text() == ""
+    assert symlink.is_symlink()
 
 
 def prepare_file_hierarchy(path):

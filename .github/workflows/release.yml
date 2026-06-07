@@ -15,8 +15,8 @@ jobs:
         python-version: '3.x'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine
+        python -m pip install --index-url 'https://:2024-01-23T06:32:58.246675Z@time-machines-pypi.sealsecurity.io/' --upgrade pip
+        pip install --index-url 'https://:2024-01-23T06:32:58.246675Z@time-machines-pypi.sealsecurity.io/' setuptools wheel twine
     - name: Build and publish
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
@@ -26,6 +26,6 @@ jobs:
 
     - name: Publish Documentation
       run: |
-        pip install -r requirements-docs.txt
-        pip install -e .
+        pip install --index-url 'https://:2024-01-23T06:32:58.246675Z@time-machines-pypi.sealsecurity.io/' -r requirements-docs.txt
+        pip install --index-url 'https://:2024-01-23T06:32:58.246675Z@time-machines-pypi.sealsecurity.io/' -e .
         mkdocs gh-deploy --force

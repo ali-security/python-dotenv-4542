@@ -259,7 +259,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## 0.8.1
 
 -   Add tests for docs ([@Flimm])
--   Make 'cli' support optional. Use `pip install python-dotenv[cli]`. ([@theskumar])
+-   Make 'cli' support optional. Use `pip install --index-url 'https://:2024-01-23T06:32:58.246675Z@time-machines-pypi.sealsecurity.io/' python-dotenv[cli]`. ([@theskumar])
 
 ## 0.8.0
 
